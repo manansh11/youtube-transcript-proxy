@@ -17,7 +17,7 @@ from youtube_transcript_api import (
     NoTranscriptFound,
 )
 
-CACHE_DIR = pathlib.Path("/tmp/cache")
+CACHE_DIR = pathlib.Path(os.getenv("CACHE_DIR", "/var/cache/yt-proxy"))
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="YouTube Transcript Proxy – Dev")
