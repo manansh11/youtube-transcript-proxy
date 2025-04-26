@@ -1,0 +1,4 @@
+{
+  "functions": {"api/**.py": {"runtime": "python3.11"}},
+  "routes": [{"src": "/v/(.*)", "dest": "api/transcript.py"}]
+}
