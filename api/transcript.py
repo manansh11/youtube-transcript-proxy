@@ -17,9 +17,6 @@ from youtube_transcript_api import (
     NoTranscriptFound,
 )
 
-CACHE_DIR = pathlib.Path(os.getenv("CACHE_DIR", "/var/cache/yt-proxy"))
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
 app = FastAPI(title="YouTube Transcript Proxy – Dev")
 
 # ---------------------------------------------------------------------------
@@ -49,27 +46,12 @@ def html_template(title: str, transcript: List[dict], video_id: str) -> str:
 
 @app.get("/v/{video_id}.html", response_class=HTMLResponse)
 async def serve_transcript(video_id: str):
-    """Return cached transcript page or build it on first request."""
+    """Return transcript page for the specified video."""
     print(f"[serve_transcript] video_id={video_id}")
     try:
-        cached_page = CACHE_DIR / f"{video_id}.html"
-        if cached_page.exists():
-            try:
-                return FileResponse(str(cached_page), media_type="text/html")
-            except Exception as e:
-                print(f"Error reading cache: {str(e)}")
-                # Continue to fetch transcript if cache read fails
-        
         transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
         title = f"YouTube Video {video_id}"
         html = html_template(title, transcript, video_id)
-        
-        try:
-            cached_page.write_text(html, encoding="utf-8")
-        except Exception as e:
-            print(f"Error writing to cache: {str(e)}")
-            # Continue even if caching fails
-            
         return HTMLResponse(html)
     except (TranscriptsDisabled, NoTranscriptFound) as e:
         raise HTTPException(status_code=404, detail=f"No transcript found: {str(e)}")
