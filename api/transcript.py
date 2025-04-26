@@ -15,6 +15,8 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
     TranscriptsDisabled,
     NoTranscriptFound,
+    VideoUnavailable,          # ← add
+    CouldNotRetrieveTranscript # ← add
 )
 
 app = FastAPI(title="YouTube Transcript Proxy – Dev")
@@ -53,8 +55,17 @@ async def serve_transcript(video_id: str):
         title = f"YouTube Video {video_id}"
         html = html_template(title, transcript, video_id)
         return HTMLResponse(html)
-    except (TranscriptsDisabled, NoTranscriptFound) as e:
-        raise HTTPException(status_code=404, detail=f"No transcript found: {str(e)}")
+    # Anything that means "YouTube has no captions for us"
+    except (
+        TranscriptsDisabled,
+        NoTranscriptFound,
+        VideoUnavailable,
+        CouldNotRetrieveTranscript,
+    ) as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No transcript available: {e}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
